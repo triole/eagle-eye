@@ -26,6 +26,8 @@ vars:
     APP_NAME:
         sh: pwd | grep -Po "[^/]+$"
 
+    APP_NAME_SHORT: ee
+
     ARCH:
         sh: arch
 
@@ -67,7 +69,7 @@ tasks:
             - cmd: mkdir -p $(pwd)/{{.TARGET_FOLDER}}/{{.tf}}
             - cmd: >-
                 CGO_ENABLED=0 {{.ta}}
-                go build -o $(pwd)/{{.TARGET_FOLDER}}/{{.tf}}/{{.APP_NAME}}
+                go build -o $(pwd)/{{.TARGET_FOLDER}}/{{.tf}}/{{.APP_NAME_SHORT}}
                 -ldflags "-s -w -X 'main.BUILDTAGS={
                 _subversion: {{.GIT_COMMIT_NO}}, Author: {{.AUTHOR}},
                 Build date: {{.DATE}}, Git hash: {{.GIT_COMMIT_HASH}},
