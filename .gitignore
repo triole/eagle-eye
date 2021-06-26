@@ -1,0 +1,4 @@
+.task/
+build/
+tmp/
+go.trace
