@@ -28,6 +28,6 @@ func runCmd(cmdArr []string, print bool) ([]byte, int, error) {
 			}
 		}
 	}
-	fmt.Printf("\n")
+	fmt.Printf("")
 	return stdBuffer.Bytes(), exitcode, err
 }

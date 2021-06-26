@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
 	"github.com/fatih/color"
@@ -23,15 +22,13 @@ type Event struct {
 // EventChan holds what is pushed into the processing channels
 type EventChan chan Event
 
-func watch(interval time.Duration) {
+func watch(settings tSettings) {
 	w := watcher.New()
-
-	r := regexp.MustCompile(CLI.Regex)
-	w.AddFilterHook(watcher.RegexFilterHook(r, false))
+	w.AddFilterHook(watcher.RegexFilterHook(settings.Regex, false))
 
 	chin := make(EventChan)
 	go ticker(chin)
-	go runChannelWatcher(interval, chin)
+	go runChannelWatcher(settings, chin)
 
 	go func() {
 		for {
@@ -50,7 +47,7 @@ func watch(interval time.Duration) {
 		}
 	}()
 
-	if err := w.AddRecursive(CLI.Folder); err != nil {
+	if err := w.AddRecursive(settings.Folder); err != nil {
 		log.Fatalln(err)
 	}
 
@@ -58,35 +55,40 @@ func watch(interval time.Duration) {
 		w.Wait()
 	}()
 
-	if err := w.Start(interval); err != nil {
+	if err := w.Start(settings.Interval); err != nil {
 		log.Fatalln(err)
 	}
 }
 
-func runChannelWatcher(interval time.Duration, chin EventChan) {
+func runChannelWatcher(settings tSettings, chin EventChan) {
 	current := time.Now()
 	last := time.Now()
-	diff := current.Sub(last) > interval-interval/4
+	diff := current.Sub(last) > settings.Interval-settings.Interval/4
 	var lastDiff bool
 	for ev := range chin {
 		if ev.Event.Op > 0 {
-			if time.Now().Sub(lastRun) > interval+interval/4 {
-				fmt.Print("\033[2J")
-				fmt.Print("\033[H")
+			if time.Now().Sub(lastRun) > settings.Interval+settings.Interval/4 &&
+				settings.Spectate == false {
+				if settings.KeepOutput == false {
+					fmt.Print("\033[2J")
+					fmt.Print("\033[H")
+				}
 				now := time.Now()
-				color.Green("\n%s\n", now)
+				color.Green("\n%s %q\n",
+					now.Format("2006-03-02 15:04:05.999"), settings.Command,
+				)
 				lastRun = now
 			}
 			printEvent(ev.Event)
 		}
-		if CLI.Spectate == false {
+		if settings.Spectate == false {
 			lastDiff = diff
 			last = current
 			current = ev.Time
-			diff = current.Sub(last) > interval-interval/4
+			diff = current.Sub(last) > settings.Interval-settings.Interval/4
 			if lastDiff == false && diff == true {
 				lastRun = time.Now()
-				runCmd(CLI.Command, true)
+				runCmd(settings.Command, true)
 			}
 		}
 	}
