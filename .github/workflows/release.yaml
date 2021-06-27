@@ -1,0 +1,50 @@
+name: goreleaser
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+    goreleaser:
+        runs-on: ubuntu-latest
+        steps:
+            -
+                name: Checkout
+                uses: actions/checkout@v2
+                with:
+                    fetch-depth: 0
+            -
+                name: Set up Go
+                uses: actions/setup-go@v2
+                with:
+                    go-version: 1.16
+            -
+                name: Install task
+                env:
+                    URL: go-task/task/releases/latest
+                    GREP_SCHEME: "(?<=href\\=\").*linux_amd64.tar.gz"
+                    TARGET_FOLDER: /home/runner/.local/bin
+                run: curl https://raw.githubusercontent.com/triole/ghsh/master/install_from_github.sh | bash
+            -
+                name: Make github config
+                run: curl https://raw.githubusercontent.com/triole/ghsh/master/make_github_config.sh | bash
+            -
+                name: Run builder
+                env:
+                    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                run: |
+                    /home/runner/.local/bin/task mod
+                    /home/runner/.local/bin/task task_folder=/home/runner/.local/bin/
+            -
+                name: Gzip assets
+                env:
+                    BASE_DIR: build
+                run: curl https://raw.githubusercontent.com/triole/ghsh/master/compress_builds.sh | bash
+            -
+                name: Upload release binaries
+                uses: alexellis/upload-assets@0.3.0
+                env:
+                    GITHUB_TOKEN: ${{ github.token }}
+                with:
+                    asset_paths: '["/tmp/assets/*"]'

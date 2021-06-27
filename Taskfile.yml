@@ -35,7 +35,7 @@ vars:
         sh: date
 
     GIT_COMMIT_NO:
-        sh: git rev-list "origin/master" --count
+        sh: git rev-list "origin/test" --count --
 
     GIT_COMMIT_HASH:
         sh: git rev-parse HEAD
@@ -75,7 +75,9 @@ tasks:
                 Build date: {{.DATE}}, Git hash: {{.GIT_COMMIT_HASH}},
                 }'"
                 src/*.go
-            - cmd: file $(pwd)/{{.TARGET_FOLDER}}/{{.tf}}/{{.APP_NAME}}
+            - cmd: >-
+                find $(pwd)/{{.TARGET_FOLDER}}/{{.tf}} -executable -type f
+                | xargs -i file {}
 
     test:
         sources:
@@ -111,7 +113,3 @@ tasks:
                         fi
                     {{end}}
                 {{end}}
-
-    test_ghwf:
-        cmds:
-            - cmd: act -s ARTIFACTORY_AUTH_TOKEN=${ARTIFACTORY_AUTH_TOKEN}
