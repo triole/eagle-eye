@@ -35,7 +35,7 @@ vars:
         sh: date
 
     GIT_COMMIT_NO:
-        sh: git rev-list "origin/test" --count --
+        sh: git rev-list "origin/master" --count --
 
     GIT_COMMIT_HASH:
         sh: git rev-parse HEAD
