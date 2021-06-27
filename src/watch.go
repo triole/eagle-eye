@@ -7,6 +7,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/radovskyb/watcher"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -79,7 +80,7 @@ func runChannelWatcher(settings tSettings, chin EventChan) {
 				)
 				lastRun = now
 			}
-			printEvent(ev.Event)
+			printEvent(ev.Event, settings)
 		}
 		if settings.Spectate == false {
 			lastDiff = diff
@@ -103,7 +104,7 @@ func ticker(chin EventChan) {
 	}
 }
 
-func printEvent(event watcher.Event) {
+func printEvent(event watcher.Event, settings tSettings) {
 	t := "FILE"
 	if event.IsDir() == true {
 		t = "FOLDER"
@@ -112,5 +113,16 @@ func printEvent(event watcher.Event) {
 		fmt.Printf("%s\t%s\t%s\n", t, event.Op, event.Path)
 	} else {
 		fmt.Printf("%s\t%s\t%s %s\n", t, event.Op, event.Path, event.OldPath)
+	}
+
+	if settings.LogInit == true {
+		fields := logrus.Fields{
+			"type": t,
+			"path": fmt.Sprintf(event.Path),
+		}
+		if event.Path != event.OldPath {
+			fields["old_path"] = event.OldPath
+		}
+		settings.Logging.WithFields(fields).Info(fmt.Sprintf("%s", event.Op))
 	}
 }

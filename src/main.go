@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+	"github.com/sirupsen/logrus"
 )
 
 type tSettings struct {
@@ -15,6 +16,8 @@ type tSettings struct {
 	Regex      *regexp.Regexp
 	Spectate   bool
 	KeepOutput bool
+	Logging    *logrus.Logger
+	LogInit    bool
 }
 
 func main() {
@@ -26,9 +29,14 @@ func main() {
 		Regex:      regexp.MustCompile(CLI.Regex),
 		Spectate:   CLI.Spectate,
 		KeepOutput: CLI.KeepOutput,
+		LogInit:    false,
 	}
 	if len(settings.Command) < 1 {
 		settings.Spectate = true
+	}
+
+	if CLI.LogFile != "" {
+		settings.Logging, settings.LogInit = initLogging(CLI.LogFile)
 	}
 
 	mode := fmt.Sprintf("command on change: %q", settings.Command)
