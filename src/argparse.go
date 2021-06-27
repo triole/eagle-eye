@@ -12,7 +12,7 @@ import (
 var (
 	// BUILDTAGS are injected ld flags during build
 	BUILDTAGS      string
-	appName        = "sentry"
+	appName        = "eagle-eye"
 	appDescription = "eagle-eye is a folder watcher that runs commands on change of files"
 	appMainversion = "0.1"
 )
