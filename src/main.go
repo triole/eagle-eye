@@ -43,6 +43,7 @@ func main() {
 	if settings.Spectate == true {
 		mode = "just spectate"
 	}
+
 	color.Green("\nWatch folder %q, %s", settings.Folder, mode)
 	watch(settings)
 }

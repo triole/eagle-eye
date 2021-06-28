@@ -23,6 +23,8 @@ type Event struct {
 // EventChan holds what is pushed into the processing channels
 type EventChan chan Event
 
+type tVarMap map[string]string
+
 func watch(settings tSettings) {
 	w := watcher.New()
 	w.AddFilterHook(watcher.RegexFilterHook(settings.Regex, false))
@@ -62,12 +64,15 @@ func watch(settings tSettings) {
 }
 
 func runChannelWatcher(settings tSettings, chin EventChan) {
+	varMap := make(tVarMap)
 	current := time.Now()
 	last := time.Now()
 	diff := current.Sub(last) > settings.Interval-settings.Interval/4
 	var lastDiff bool
+
 	for ev := range chin {
 		if ev.Event.Op > 0 {
+
 			if time.Now().Sub(lastRun) > settings.Interval+settings.Interval/4 &&
 				settings.Spectate == false {
 				if settings.KeepOutput == false {
@@ -80,17 +85,21 @@ func runChannelWatcher(settings tSettings, chin EventChan) {
 				)
 				lastRun = now
 			}
+
+			varMap["path"] = ev.Event.Path
 			printEvent(ev.Event, settings)
-		}
-		if settings.Spectate == false {
-			lastDiff = diff
-			last = current
-			current = ev.Time
-			diff = current.Sub(last) > settings.Interval-settings.Interval/4
-			if lastDiff == false && diff == true {
-				lastRun = time.Now()
-				runCmd(settings.Command, true)
+
+			if settings.Spectate == false {
+				lastDiff = diff
+				last = current
+				current = ev.Time
+				diff = current.Sub(last) > settings.Interval-settings.Interval/4
+				if lastDiff == false && diff == true {
+					lastRun = time.Now()
+					runCmd(settings.Command, varMap, true)
+				}
 			}
+
 		}
 	}
 }
