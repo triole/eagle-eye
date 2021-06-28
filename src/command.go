@@ -40,7 +40,7 @@ func expandVars(cmdArr []string, varMap tVarMap) []string {
 	for idx, el := range cmdArr {
 		for key, val := range varMap {
 			cmdArr[idx] = strings.Replace(
-				el, "{"+key+"}", val, -1,
+				el, "{"+strings.ToUpper(key)+"}", val, -1,
 			)
 		}
 	}
