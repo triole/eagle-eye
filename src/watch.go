@@ -66,7 +66,7 @@ func watch(settings tSettings) {
 func runChannelWatcher(settings tSettings, chin EventChan) {
 	varMap := make(tVarMap)
 	current := time.Now()
-	last := time.Now().Add(-time.Hour * 1)
+	last := time.Now().Add(-time.Second * (settings.Interval * 2))
 	diff := current.Sub(last) > settings.Interval-settings.Interval/4
 	var lastDiff bool
 
