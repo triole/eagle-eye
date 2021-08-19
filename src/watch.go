@@ -96,7 +96,7 @@ func runChannelWatcher(settings tSettings, chin EventChan) {
 				diff = current.Sub(last) > settings.Interval-settings.Interval/4
 				if lastDiff == true && diff == true {
 					lastRun = time.Now()
-					runCmd(settings.Command, varMap, true)
+					runCmd(settings.Command, varMap)
 				}
 			}
 

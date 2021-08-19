@@ -10,17 +10,14 @@ import (
 	"syscall"
 )
 
-func runCmd(cmdArr []string, varMap tVarMap, print bool) ([]byte, int, error) {
+func runCmd(cmdArr []string, varMap tVarMap) ([]byte, int, error) {
 	var err error
 	var exitcode int
 	var stdBuffer bytes.Buffer
 
 	cmdArr = expandVars(cmdArr, varMap)
 	cmd := exec.Command(cmdArr[0], cmdArr[1:]...)
-	mw := io.MultiWriter(&stdBuffer)
-	if print == true {
-		mw = io.MultiWriter(os.Stdout, &stdBuffer)
-	}
+	mw := io.MultiWriter(os.Stdout, &stdBuffer)
 	cmd.Stdout = mw
 	cmd.Stderr = mw
 	if err = cmd.Run(); err != nil {
@@ -30,6 +27,9 @@ func runCmd(cmdArr []string, varMap tVarMap, print bool) ([]byte, int, error) {
 				exitcode = status.ExitStatus()
 			}
 		}
+	}
+	if err != nil {
+		fmt.Printf("An error occured: %s\n", err)
 	}
 	fmt.Printf("")
 
