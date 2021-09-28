@@ -23,6 +23,12 @@ type tSettings struct {
 
 func main() {
 	parseArgs()
+
+	if CLI.PrintVars == true {
+		printAvailableVars()
+		os.Exit(0)
+	}
+
 	settings := tSettings{
 		Command:    CLI.Command,
 		Folder:     CLI.Folder,
@@ -46,11 +52,8 @@ func main() {
 	}
 
 	if CLI.RunInitially == true {
-		varMap := make(tVarMap)
-		curdir, _ := os.Getwd()
-		varMap["path"] = curdir
-		color.Green("\nRun command initially %q, %+v", settings.Command, varMap)
-		runCmd(settings, varMap)
+		color.Green("\nRun command initially %q, %+v", settings.Command)
+		runCmd(settings.Command)
 	}
 
 	color.Green("\nWatch folder %q, %s", settings.Folder, mode)

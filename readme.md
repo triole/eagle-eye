@@ -27,15 +27,18 @@ ee -s
 # NOTE: flags always have to be in front of the command
 ee -r .md$ -f /home/user/my_markdowns ls -lah
 
+# get a list of available variables
+ee -p
 ```
 
 ## Variables
 
-Currently only one variable is supported. Maybe more to come.
+Currently supported variables:
 
-| var    | value                         |
-|--------|-------------------------------|
-| {PATH} | path that triggered the event |
+| var       | value                                  |
+|-----------|----------------------------------------|
+| {{.file}} | path that triggered the event          |
+| {{.dir}}  | folder of the file triggered the event |
 
 ## Disclaimer
 

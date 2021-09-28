@@ -6,25 +6,14 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"strings"
 	"syscall"
-
-	"github.com/sirupsen/logrus"
 )
 
-func runCmd(settings tSettings, varMap tVarMap) ([]byte, int, error) {
+func runCmd(cmdArr []string) ([]byte, int, error) {
 	var err error
 	var exitcode int
 	var stdBuffer bytes.Buffer
-	cmdArr := settings.Command
 
-	if settings.LogInit == true {
-		settings.Logging.WithFields(logrus.Fields{}).Info(
-			fmt.Sprintf("%s", cmdArr),
-		)
-	}
-
-	cmdArr = expandVars(cmdArr, varMap)
 	cmd := exec.Command(cmdArr[0], cmdArr[1:]...)
 	mw := io.MultiWriter(os.Stdout, &stdBuffer)
 	cmd.Stdout = mw
@@ -43,15 +32,4 @@ func runCmd(settings tSettings, varMap tVarMap) ([]byte, int, error) {
 	fmt.Printf("")
 
 	return stdBuffer.Bytes(), exitcode, err
-}
-
-func expandVars(cmdArr []string, varMap tVarMap) []string {
-	for idx, el := range cmdArr {
-		for key, val := range varMap {
-			cmdArr[idx] = strings.Replace(
-				el, "{"+strings.ToUpper(key)+"}", val, -1,
-			)
-		}
-	}
-	return cmdArr
 }

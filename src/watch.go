@@ -64,12 +64,10 @@ func watch(settings tSettings) {
 }
 
 func runChannelWatcher(settings tSettings, chin EventChan) {
-	varMap := make(tVarMap)
 	current := time.Now()
 	last := time.Now().Add(-time.Second * (settings.Interval * 2))
 	diff := current.Sub(last) > settings.Interval-settings.Interval/4
 	var lastDiff bool
-
 	for ev := range chin {
 		if ev.Event.Op > 0 {
 
@@ -86,7 +84,6 @@ func runChannelWatcher(settings tSettings, chin EventChan) {
 				lastRun = now
 			}
 
-			varMap["path"] = ev.Event.Path
 			printEvent(ev.Event, settings)
 
 			if settings.Spectate == false {
@@ -96,7 +93,15 @@ func runChannelWatcher(settings tSettings, chin EventChan) {
 				diff = current.Sub(last) > settings.Interval-settings.Interval/4
 				if lastDiff == true && diff == true {
 					lastRun = time.Now()
-					runCmd(settings, varMap)
+					cmdArr := iterTemplate(
+						settings.Command, makeVarMap(ev.Event),
+					)
+					if settings.LogInit == true {
+						settings.Logging.WithFields(logrus.Fields{}).Info(
+							fmt.Sprintf("%s", cmdArr),
+						)
+					}
+					runCmd(cmdArr)
 				}
 			}
 
@@ -134,4 +139,11 @@ func printEvent(event watcher.Event, settings tSettings) {
 		}
 		settings.Logging.WithFields(fields).Info(fmt.Sprintf("%s", event.Op))
 	}
+}
+
+func makeVarMap(ev watcher.Event) (varMap map[string]interface{}) {
+	varMap = make(map[string]interface{})
+	varMap["file"] = ev.Path
+	varMap["dir"] = find(`.*/`, ev.Path)
+	return
 }
