@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"time"
 
@@ -42,6 +43,14 @@ func main() {
 	mode := fmt.Sprintf("command on change: %q", settings.Command)
 	if settings.Spectate == true {
 		mode = "just spectate"
+	}
+
+	if CLI.RunInitially == true {
+		varMap := make(tVarMap)
+		curdir, _ := os.Getwd()
+		varMap["path"] = curdir
+		color.Green("\nRun command initially %q, %+v", settings.Command, varMap)
+		runCmd(settings.Command, varMap)
 	}
 
 	color.Green("\nWatch folder %q, %s", settings.Folder, mode)
