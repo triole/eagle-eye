@@ -8,12 +8,21 @@ import (
 	"os/exec"
 	"strings"
 	"syscall"
+
+	"github.com/sirupsen/logrus"
 )
 
-func runCmd(cmdArr []string, varMap tVarMap) ([]byte, int, error) {
+func runCmd(settings tSettings, varMap tVarMap) ([]byte, int, error) {
 	var err error
 	var exitcode int
 	var stdBuffer bytes.Buffer
+	cmdArr := settings.Command
+
+	if settings.LogInit == true {
+		settings.Logging.WithFields(logrus.Fields{}).Info(
+			fmt.Sprintf("%s", cmdArr),
+		)
+	}
 
 	cmdArr = expandVars(cmdArr, varMap)
 	cmd := exec.Command(cmdArr[0], cmdArr[1:]...)

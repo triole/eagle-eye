@@ -50,7 +50,7 @@ func main() {
 		curdir, _ := os.Getwd()
 		varMap["path"] = curdir
 		color.Green("\nRun command initially %q, %+v", settings.Command, varMap)
-		runCmd(settings.Command, varMap)
+		runCmd(settings, varMap)
 	}
 
 	color.Green("\nWatch folder %q, %s", settings.Folder, mode)
