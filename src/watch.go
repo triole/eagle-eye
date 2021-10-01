@@ -25,6 +25,11 @@ type EventChan chan Event
 
 type tVarMap map[string]string
 
+type tVarMapEntry struct {
+	Val  interface{}
+	Desc string
+}
+
 func watch(settings tSettings) {
 	w := watcher.New()
 	w.AddFilterHook(watcher.RegexFilterHook(settings.Regex, false))
@@ -141,9 +146,13 @@ func printEvent(event watcher.Event, settings tSettings) {
 	}
 }
 
-func makeVarMap(ev watcher.Event) (varMap map[string]interface{}) {
-	varMap = make(map[string]interface{})
-	varMap["file"] = ev.Path
-	varMap["dir"] = find(`.*/`, ev.Path)
+func makeVarMap(ev watcher.Event) (varMap map[string]tVarMapEntry) {
+	varMap = make(map[string]tVarMapEntry)
+	varMap["file"] = tVarMapEntry{
+		ev.Path, "file that triggered the event",
+	}
+	varMap["folder"] = tVarMapEntry{
+		find(`.*/`, ev.Path), "folder of the file that triggered the event",
+	}
 	return
 }

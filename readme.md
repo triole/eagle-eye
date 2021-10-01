@@ -18,7 +18,7 @@ A folder watcher that runs commands on change of files or folders. Inspired and 
 ee ls -la
 
 # pass events path to the command
-ee cat {PATH}
+ee cat {{.file}}
 
 # spectate mode, just prints changes, does not execute a command
 ee -s
@@ -33,12 +33,14 @@ ee -p
 
 ## Variables
 
-Currently supported variables:
+```go mdox-exec="r -p"
 
-| var       | value                                  |
-|-----------|----------------------------------------|
-| {{.file}} | path that triggered the event          |
-| {{.dir}}  | folder of the file triggered the event |
+The following vars are available:
+
+  {{.dir}}	folder of the file that triggered the event
+  {{.file}}	file that triggered the event
+
+```
 
 ## Disclaimer
 

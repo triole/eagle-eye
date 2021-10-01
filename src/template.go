@@ -9,9 +9,13 @@ import (
 	"github.com/radovskyb/watcher"
 )
 
-func iterTemplate(arr []string, varMap map[string]interface{}) (r []string) {
+func iterTemplate(arr []string, varMap map[string]tVarMapEntry) (r []string) {
+	tempMap := make(map[string]interface{})
+	for key, val := range varMap {
+		tempMap[key] = val.Val
+	}
 	for _, el := range arr {
-		r = append(r, execTemplate(el, varMap))
+		r = append(r, execTemplate(el, tempMap))
 	}
 	return
 }
@@ -35,9 +39,9 @@ func printAvailableVars() {
 		iterator = append(iterator, el)
 	}
 	sort.Strings(iterator)
-	fmt.Printf("\nThe following vars are available:\n")
+	fmt.Printf("\nThe following vars are available:\n\n")
 	for _, val := range iterator {
-		fmt.Printf("    {{.%s}}\n", val)
+		fmt.Printf("  {{.%s}}\t%s\n", val, vm[val].Desc)
 	}
 	fmt.Printf("\n")
 }
