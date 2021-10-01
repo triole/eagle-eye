@@ -1,11 +1,11 @@
-# Eagle Eye
+# Eagle Eye![build](https://github.com/triole/eagle-eye/actions/workflows/build.yaml/badge.svg)
 
 <!--- mdtoc: toc begin -->
 
-1.	[Synopsis](#synopsis)
-2.	[Usage](#usage)
-3.	[Variables](#variables)
-4.	[Disclaimer](#disclaimer)<!--- mdtoc: toc end -->
+1. [Synopsis](#synopsis)
+2. [Usage](#usage)
+3. [Variables](#variables)
+4. [Disclaimer](#disclaimer)<!--- mdtoc: toc end -->
 
 ## Synopsis
 
