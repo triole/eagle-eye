@@ -1,4 +1,4 @@
-# Eagle Eye![build](https://github.com/triole/eagle-eye/actions/workflows/build.yaml/badge.svg)
+# Eagle Eye ![build](https://github.com/triole/eagle-eye/actions/workflows/build.yaml/badge.svg)
 
 <!--- mdtoc: toc begin -->
 
