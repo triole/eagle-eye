@@ -28,17 +28,17 @@ ee -s
 ee -r .md$ -f /home/user/my_markdowns ls -lah
 
 # get a list of available variables
-ee -p
+ee -n
 ```
 
 ## Variables
 
-```go mdox-exec="r -p"
+```go mdox-exec="r -n"
 
 The following vars are available:
 
-  {{.dir}}	folder of the file that triggered the event
   {{.file}}	file that triggered the event
+  {{.folder}}	folder of the file that triggered the event
 
 ```
 

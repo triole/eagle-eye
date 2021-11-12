@@ -27,7 +27,7 @@ var CLI struct {
 	RunInitially bool     `help:"run command initially, normal behaviour is to run on first change of files"`
 	KeepOutput   bool     `help:"keep output, do not clear screen when running command" short:k`
 	LogFile      string   `help:"log file, if not given no logs will be written, this is default" short:l`
-	PrintVars    bool     `help:"print a list of available variables" short:p`
+	PrintVars    bool     `help:"print a list of available variables" short:n`
 	VersionFlag  bool     `help:"display version" short:V`
 }
 
