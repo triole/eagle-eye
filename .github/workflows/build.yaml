@@ -28,7 +28,7 @@ jobs:
                     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                     GO_BIN_PATH: /home/runner/.local/bin/go
                     APP_NAME: ee
-                    # SOURCE_FOLDER: /home/runner
+                    SOURCE_FOLDER: src
                     TARGET_FOLDER: build
                 run: curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/go_build.sh | bash
             -
