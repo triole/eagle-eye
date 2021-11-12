@@ -13,6 +13,7 @@ import (
 type tSettings struct {
 	Command    []string
 	Interval   time.Duration
+	Pause      time.Duration
 	Folder     string
 	Regex      *regexp.Regexp
 	Spectate   bool
@@ -33,6 +34,7 @@ func main() {
 		Command:    CLI.Command,
 		Folder:     CLI.Folder,
 		Interval:   time.Duration(CLI.Interval) * time.Second,
+		Pause:      time.Duration(CLI.Pause) * time.Second,
 		Regex:      regexp.MustCompile(CLI.Regex),
 		Spectate:   CLI.Spectate,
 		KeepOutput: CLI.KeepOutput,
@@ -53,7 +55,7 @@ func main() {
 
 	if CLI.RunInitially == true {
 		color.Green("\nRun command initially %q, %+v", settings.Command)
-		runCmd(settings.Command)
+		runCmd(settings.Command, settings.Pause)
 	}
 
 	color.Green("\nWatch folder %q, %s", settings.Folder, mode)

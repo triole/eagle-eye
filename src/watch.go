@@ -106,7 +106,7 @@ func runChannelWatcher(settings tSettings, chin EventChan) {
 							fmt.Sprintf("%s", cmdArr),
 						)
 					}
-					runCmd(cmdArr)
+					runCmd(cmdArr, settings.Pause)
 				}
 			}
 

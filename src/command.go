@@ -7,12 +7,17 @@ import (
 	"os"
 	"os/exec"
 	"syscall"
+	"time"
 )
 
-func runCmd(cmdArr []string) ([]byte, int, error) {
+func runCmd(cmdArr []string, pause time.Duration) ([]byte, int, error) {
 	var err error
 	var exitcode int
 	var stdBuffer bytes.Buffer
+
+	if pause > 0 {
+		time.Sleep(pause)
+	}
 
 	cmd := exec.Command(cmdArr[0], cmdArr[1:]...)
 	mw := io.MultiWriter(os.Stdout, &stdBuffer)
