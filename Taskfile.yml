@@ -1,115 +1,41 @@
 version: '3'
 
 vars:
-    ARCHS_TO_BUILD: |
-        - linux_armv6l:GOOS=linux GOARCH=arm GOARM=6
-        - linux_armv7l:GOOS=linux GOARCH=arm GOARM=7
-        - linux_armv64:GOOS=linux GOARCH=arm64
-        - linux_i686:GOOS=linux GOARCH=386
-        - linux_x86_64:GOOS=linux GOARCH=amd64
-        - freebsd_arm64:GOOS=freebsd GOARCH=arm64
-        - freebsd_i686:GOOS=freebsd GOARCH=386
-        - freebsd_x86_64:GOOS=freebsd GOARCH=amd64
-        - darwin_arm64:GOOS=darwin GOARCH=arm64
-        - darwin_x86_64:GOOS=darwin GOARCH=amd64
-    TARGET_FOLDER: build
-
-    SOURCE_DIR:
-        sh: find $(pwd) -mindepth 1 -maxdepth 2 -regex ".*\.go$" | head -n 1 | grep -Po ".*(?=\/)"
-
-    SUB_MODS:
-        sh: find src -mindepth 1 -maxdepth 1 -type d | grep -Po "(?<=src/).*" | tr '\n' ':'
-
-    AUTHOR:
-        sh: grep -Po "(?<=name\s=\s).*" ~/.gitconfig
-
-    APP_NAME:
-        sh: pwd | grep -Po "[^/]+$"
-
-    APP_NAME_SHORT: ee
-
-    ARCH:
-        sh: arch
-
-    DATE:
-        sh: date
-
-    GIT_COMMIT_NO:
-        sh: git rev-list "origin/master" --count --
-
-    GIT_COMMIT_HASH:
-        sh: git rev-parse HEAD
-
-    CURDIR:
-        sh: pwd
+    SOURCE_FOLDER: src
 
 tasks:
     default:
         cmds:
             - task: test
-            - task: buildall
+            - task: build
 
-    buildall:
-        env:
-            TASK_BIN: "{{.task_folder}}task"
-        desc: build all architectures in build list
+    mod:
+        desc: update go modules, add submodules to go root
         cmds:
-            - |
-                {{range $i, $line := .ARCHS_TO_BUILD | splitLines}}
-                    {{if $line}}
-                        $TASK_BIN build ta="{{$line | regexFind "GOOS.*" }}" tf="{{$line | regexFind "[0-9a-z_+]+" }}"
-                    {{end}}
-                {{end}}
-                find build/ -type f | sort | xargs md5sum
+            - cmd: |
+                export SOURCE_FOLDER={{.SOURCE_FOLDER}}
+                curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/go_add_sub_packages.sh | bash
 
     build:
-        desc: build binary, also called by buildall
+        desc: build binary using remote ghwfe script, requires curl
         cmds:
-            - cmd: pwd
-            - cmd: mkdir -p $(pwd)/{{.TARGET_FOLDER}}/{{.tf}}
-            - cmd: >-
-                CGO_ENABLED=0 {{.ta}}
-                go build -o $(pwd)/{{.TARGET_FOLDER}}/{{.tf}}/{{.APP_NAME_SHORT}}
-                -ldflags "-s -w -X 'main.BUILDTAGS={
-                _subversion: {{.GIT_COMMIT_NO}}, Author: {{.AUTHOR}},
-                Build date: {{.DATE}}, Git hash: {{.GIT_COMMIT_HASH}},
-                }'"
-                src/*.go
-            - cmd: >-
-                find $(pwd)/{{.TARGET_FOLDER}}/{{.tf}} -executable -type f
-                | xargs -i file {}
+            - cmd: |
+                export SOURCE_FOLDER={{.SOURCE_FOLDER}}
+                export APP_NAME=ee
+                curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/go_build.sh | bash
 
     test:
+        desc: run go tests
         sources:
-            - src/*
+            - "{{.SOURCE_FOLDER}}/*"
         method: timestamp
         cmds:
             - cmd: >-
-                go test
-                -trace go.trace -race -cover -bench=.
-                {{.SOURCE_DIR}}/*.go
+                go test -trace go.trace -race -cover -bench=.
+                {{.SOURCE_FOLDER}}/*.go
 
     deploy:
-        cp -rpf build/* ${HOME}/tools/arch/mybins/
-
-    mod:
-        env:
-            SD: "{{.SOURCE_DIR}}"
-            AN: "{{.APP_NAME}}"
-        desc: update go modules, add submodules to go root
+        desc: build and copy to my personal arch mybins folder
         cmds:
-            - cmd: if [[ ! -f go.mod ]]; then go mod init {{.APP_NAME}}; fi
-            - cmd: go mod tidy
-            - cmd: mkdir -p "${GOROOT}/src/{{.APP_NAME}}"
-            - cmd: >-
-                {{range $i, $mod := split ":" .SUB_MODS }}
-                    {{if $mod}}
-                        if [[ ! -L "${GOROOT}/src/${AN}/{{$mod}}" ]]; then
-                            if [[ ! -d "${GOROOT}/src/${AN}/{{$mod}}" ]]; then
-                                if [[ ! -f "${GOROOT}/src/${AN}/{{$mod}}" ]]; then
-                                    ln -s ${SD}/{{$mod}} "${GOROOT}/src/${AN}/{{$mod}}"
-                                fi
-                            fi
-                        fi
-                    {{end}}
-                {{end}}
+            - task: build
+            - cmd: cp -rpf build/* ${HOME}/tools/arch/mybins/
