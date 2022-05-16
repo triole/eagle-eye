@@ -20,16 +20,16 @@ jobs:
             -
                 name: Install Go
                 env:
-                    TARGET_FOLDER: /home/runner/.local/bin
-                run: curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/install_go.sh | bash
+                    TARGET_FOLDER: /home/runner/.local/go
+                run: curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/go_install.sh | bash
             -
                 name: Build
                 env:
+                    GOROOT: /home/runner/.local/go
                     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                    GO_BIN_PATH: /home/runner/.local/bin/go
                     APP_NAME: ee
                     SOURCE_FOLDER: src
-                    TARGET_FOLDER: build
+                    # TARGET_FOLDER: build
                 run: curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/go_build.sh | bash
             -
                 name: Gzip assets
