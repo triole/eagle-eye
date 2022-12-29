@@ -20,6 +20,7 @@ type tSettings struct {
 	KeepOutput bool
 	Logging    *logrus.Logger
 	LogInit    bool
+	Verbose    bool
 }
 
 func main() {
@@ -39,6 +40,7 @@ func main() {
 		Spectate:   CLI.Spectate,
 		KeepOutput: CLI.KeepOutput,
 		LogInit:    false,
+		Verbose:    CLI.Verbose,
 	}
 	if len(settings.Command) < 1 {
 		settings.Spectate = true
@@ -55,7 +57,7 @@ func main() {
 
 	if CLI.RunInitially {
 		color.Green("\nRun command initially %q, %+v", settings.Command)
-		runCmd(settings.Command, settings.Pause)
+		runCmd(settings.Command, settings.Pause, settings.Verbose)
 	}
 
 	color.Green("\nWatch folder %q, %s", settings.Folder, mode)

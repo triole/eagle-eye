@@ -73,9 +73,8 @@ func runChannelWatcher(settings tSettings, chin EventChan) {
 	var lastDiff bool
 	for ev := range chin {
 		if ev.Event.Op > 0 {
-
-			if time.Since(lastRun) > settings.Interval+settings.Interval/4 &&
-				!settings.Spectate {
+			// time.Since(lastRun) > settings.Interval+settings.Interval/4 &&
+			if calcDiff(lastRun, settings.Interval) && !settings.Spectate {
 				if !settings.KeepOutput {
 					fmt.Print("\033[2J")
 					fmt.Print("\033[H")
@@ -85,16 +84,10 @@ func runChannelWatcher(settings tSettings, chin EventChan) {
 					now.Format("2006-03-02 15:04:05.999"), settings.Command,
 				)
 				lastRun = now
-			}
-
-			printEvent(ev.Event, settings)
-
-			if !settings.Spectate {
 				lastDiff = diff
 				last = current
 				current = ev.Time
-				diff = current.Sub(last) > settings.Interval-settings.Interval/4
-				if lastDiff && diff {
+				if lastDiff && calcDiff(last, settings.Interval) {
 					lastRun = time.Now()
 					cmdArr := iterTemplate(
 						settings.Command, makeVarMap(ev.Event),
@@ -104,12 +97,19 @@ func runChannelWatcher(settings tSettings, chin EventChan) {
 							fmt.Sprintf("%s", cmdArr),
 						)
 					}
-					runCmd(cmdArr, settings.Pause)
+					runCmd(cmdArr, settings.Pause, settings.Verbose)
+				}
+			} else {
+				if settings.Spectate || settings.Verbose {
+					printEvent(ev.Event, settings)
 				}
 			}
-
 		}
 	}
+}
+
+func calcDiff(lastRun time.Time, interval time.Duration) bool {
+	return time.Since(lastRun) > interval
 }
 
 func ticker(chin EventChan) {

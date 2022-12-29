@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func runCmd(cmdArr []string, pause time.Duration) ([]byte, int, error) {
+func runCmd(cmdArr []string, pause time.Duration, verbose bool) ([]byte, int, error) {
 	var err error
 	var exitcode int
 	var stdBuffer bytes.Buffer
@@ -35,6 +35,8 @@ func runCmd(cmdArr []string, pause time.Duration) ([]byte, int, error) {
 		fmt.Printf("An error occured: %s\n", err)
 	}
 	fmt.Printf("")
-
+	if verbose {
+		fmt.Printf("\n")
+	}
 	return stdBuffer.Bytes(), exitcode, err
 }

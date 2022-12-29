@@ -28,6 +28,7 @@ var CLI struct {
 	KeepOutput   bool     `help:"keep output, do not clear screen when running command" short:k`
 	LogFile      string   `help:"log file, if not given no logs will be written, this is default" short:l`
 	PrintVars    bool     `help:"print a list of available variables" short:n`
+	Verbose      bool     `help:"print events which usually are only displayed in spectate mode in command run mode" short:v`
 	VersionFlag  bool     `help:"display version" short:V`
 }
 
