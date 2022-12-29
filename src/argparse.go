@@ -49,7 +49,7 @@ func parseArgs() {
 	)
 	_ = ctx.Run()
 
-	if CLI.VersionFlag == true {
+	if CLI.VersionFlag {
 		printBuildTags(BUILDTAGS)
 		os.Exit(0)
 	}
@@ -61,10 +61,4 @@ func printBuildTags(buildtags string) {
 	s := regexp.ReplaceAllString(buildtags, "\n")
 	s = strings.Replace(s, "_subversion: ", "Version: "+appMainversion+".", -1)
 	fmt.Printf("%s\n", s)
-}
-
-func alnum(s string) string {
-	s = strings.ToLower(s)
-	re := regexp.MustCompile("[^a-z0-9_-]")
-	return re.ReplaceAllString(s, "-")
 }

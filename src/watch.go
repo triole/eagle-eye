@@ -23,8 +23,6 @@ type Event struct {
 // EventChan holds what is pushed into the processing channels
 type EventChan chan Event
 
-type tVarMap map[string]string
-
 type tVarMapEntry struct {
 	Val  interface{}
 	Desc string
@@ -76,9 +74,9 @@ func runChannelWatcher(settings tSettings, chin EventChan) {
 	for ev := range chin {
 		if ev.Event.Op > 0 {
 
-			if time.Now().Sub(lastRun) > settings.Interval+settings.Interval/4 &&
-				settings.Spectate == false {
-				if settings.KeepOutput == false {
+			if time.Since(lastRun) > settings.Interval+settings.Interval/4 &&
+				settings.Spectate {
+				if settings.KeepOutput {
 					fmt.Print("\033[2J")
 					fmt.Print("\033[H")
 				}
@@ -91,17 +89,17 @@ func runChannelWatcher(settings tSettings, chin EventChan) {
 
 			printEvent(ev.Event, settings)
 
-			if settings.Spectate == false {
+			if settings.Spectate {
 				lastDiff = diff
 				last = current
 				current = ev.Time
 				diff = current.Sub(last) > settings.Interval-settings.Interval/4
-				if lastDiff == true && diff == true {
+				if lastDiff && diff {
 					lastRun = time.Now()
 					cmdArr := iterTemplate(
 						settings.Command, makeVarMap(ev.Event),
 					)
-					if settings.LogInit == true {
+					if settings.LogInit {
 						settings.Logging.WithFields(logrus.Fields{}).Info(
 							fmt.Sprintf("%s", cmdArr),
 						)
@@ -115,7 +113,7 @@ func runChannelWatcher(settings tSettings, chin EventChan) {
 }
 
 func ticker(chin EventChan) {
-	for _ = range time.Tick(time.Duration(1) * time.Second) {
+	for range time.Tick(time.Duration(1) * time.Second) {
 		event := Event{
 			Time: time.Now(),
 		}
@@ -125,7 +123,7 @@ func ticker(chin EventChan) {
 
 func printEvent(event watcher.Event, settings tSettings) {
 	t := "FILE"
-	if event.IsDir() == true {
+	if event.IsDir() {
 		t = "FOLDER"
 	}
 	if event.Path == event.OldPath {
@@ -134,7 +132,7 @@ func printEvent(event watcher.Event, settings tSettings) {
 		fmt.Printf("%s\t%s\t%s %s\n", t, event.Op, event.Path, event.OldPath)
 	}
 
-	if settings.LogInit == true {
+	if settings.LogInit {
 		fields := logrus.Fields{
 			"type": t,
 			"path": fmt.Sprintf(event.Path),
@@ -142,7 +140,7 @@ func printEvent(event watcher.Event, settings tSettings) {
 		if event.Path != event.OldPath {
 			fields["old_path"] = event.OldPath
 		}
-		settings.Logging.WithFields(fields).Info(fmt.Sprintf("%s", event.Op))
+		settings.Logging.WithFields(fields).Info(event.Op.String())
 	}
 }
 

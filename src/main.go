@@ -25,7 +25,7 @@ type tSettings struct {
 func main() {
 	parseArgs()
 
-	if CLI.PrintVars == true {
+	if CLI.PrintVars {
 		printAvailableVars()
 		os.Exit(0)
 	}
@@ -49,11 +49,11 @@ func main() {
 	}
 
 	mode := fmt.Sprintf("command on change: %q", settings.Command)
-	if settings.Spectate == true {
+	if settings.Spectate {
 		mode = "just spectate"
 	}
 
-	if CLI.RunInitially == true {
+	if CLI.RunInitially {
 		color.Green("\nRun command initially %q, %+v", settings.Command)
 		runCmd(settings.Command, settings.Pause)
 	}
