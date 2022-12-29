@@ -75,8 +75,8 @@ func runChannelWatcher(settings tSettings, chin EventChan) {
 		if ev.Event.Op > 0 {
 
 			if time.Since(lastRun) > settings.Interval+settings.Interval/4 &&
-				settings.Spectate {
-				if settings.KeepOutput {
+				!settings.Spectate {
+				if !settings.KeepOutput {
 					fmt.Print("\033[2J")
 					fmt.Print("\033[H")
 				}
@@ -89,7 +89,7 @@ func runChannelWatcher(settings tSettings, chin EventChan) {
 
 			printEvent(ev.Event, settings)
 
-			if settings.Spectate {
+			if !settings.Spectate {
 				lastDiff = diff
 				last = current
 				current = ev.Time
