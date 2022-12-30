@@ -6,6 +6,8 @@ vars:
 tasks:
     default:
         cmds:
+            - cmd: echo {{.GO_FILES}}
+            - cmd: exit 1
             - task: test
             - task: build
 
@@ -31,8 +33,14 @@ tasks:
         method: timestamp
         cmds:
             - cmd: >-
-                go test -trace go.trace -race -cover -bench=.
-                {{.SOURCE_FOLDER}}/*.go
+                for fol in {{.MODULES}}; do
+                    echo -e "\nTest ${fol}"
+                    cd "${fol}"
+                    go test -trace go.trace -race -cover -bench=. .
+                done
+        vars:
+            MODULES:
+                sh: find $(pwd)/src -maxdepth 1 -type d | sort | tr '\n' ' '
 
     deploy:
         desc: build and copy to my personal arch mybins folder
