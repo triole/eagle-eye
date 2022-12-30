@@ -5,7 +5,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/radovskyb/watcher"
 	"github.com/sirupsen/logrus"
 )
@@ -73,16 +72,12 @@ func runChannelWatcher(settings tSettings, chin EventChan) {
 	var lastDiff bool
 	for ev := range chin {
 		if ev.Event.Op > 0 {
-			// time.Since(lastRun) > settings.Interval+settings.Interval/4 &&
 			if calcDiff(lastRun, settings.Interval) && !settings.Spectate {
 				if !settings.KeepOutput {
 					fmt.Print("\033[2J")
 					fmt.Print("\033[H")
 				}
 				now := time.Now()
-				color.Green("\n%s %q\n",
-					now.Format("2006-03-02 15:04:05.999"), settings.Command,
-				)
 				lastRun = now
 				lastDiff = diff
 				last = current
@@ -92,17 +87,13 @@ func runChannelWatcher(settings tSettings, chin EventChan) {
 					cmdArr := iterTemplate(
 						settings.Command, makeVarMap(ev.Event),
 					)
-					if settings.LogInit {
-						settings.Logging.WithFields(logrus.Fields{}).Info(
-							fmt.Sprintf("%s", cmdArr),
-						)
-					}
+					settings.Logging.Info("Run", logrus.Fields{
+						"cmds": cmdArr,
+					})
 					runCmd(cmdArr, settings.Pause, settings.Verbose)
 				}
 			} else {
-				if settings.Spectate || settings.Verbose {
-					printEvent(ev.Event, settings)
-				}
+				printEvent(ev.Event, settings)
 			}
 		}
 	}
@@ -126,21 +117,16 @@ func printEvent(event watcher.Event, settings tSettings) {
 	if event.IsDir() {
 		t = "FOLDER"
 	}
-	if event.Path == event.OldPath {
-		fmt.Printf("%s\t%s\t%s\n", t, event.Op, event.Path)
+	if settings.Spectate {
+		settings.Logging.Info("Event", logrus.Fields{
+			"event": event.Op.String(),
+			"path":  fmt.Sprintf(event.Path),
+			"type":  t,
+		})
 	} else {
-		fmt.Printf("%s\t%s\t%s %s\n", t, event.Op, event.Path, event.OldPath)
-	}
-
-	if settings.LogInit {
-		fields := logrus.Fields{
-			"type": t,
-			"path": fmt.Sprintf(event.Path),
-		}
-		if event.Path != event.OldPath {
-			fields["old_path"] = event.OldPath
-		}
-		settings.Logging.WithFields(fields).Info(event.Op.String())
+		settings.Logging.Debug("Event", logrus.Fields{
+			"event": event.Op.String(),
+		})
 	}
 }
 

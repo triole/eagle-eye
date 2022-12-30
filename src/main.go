@@ -1,6 +1,7 @@
 package main
 
 import (
+	"eagle-eye/logging"
 	"fmt"
 	"os"
 	"regexp"
@@ -18,7 +19,7 @@ type tSettings struct {
 	Regex      *regexp.Regexp
 	Spectate   bool
 	KeepOutput bool
-	Logging    *logrus.Logger
+	Logging    logging.Logging
 	LogInit    bool
 	Verbose    bool
 }
@@ -40,15 +41,12 @@ func main() {
 		Spectate:   CLI.Spectate,
 		KeepOutput: CLI.KeepOutput,
 		LogInit:    false,
-		Verbose:    CLI.Verbose,
 	}
 	if len(settings.Command) < 1 {
 		settings.Spectate = true
 	}
 
-	if CLI.LogFile != "" {
-		settings.Logging, settings.LogInit = initLogging(CLI.LogFile)
-	}
+	settings.Logging = logging.Init(CLI.LogLevel, CLI.LogFile, CLI.LogNoColors, CLI.LogJSON)
 
 	mode := fmt.Sprintf("command on change: %q", settings.Command)
 	if settings.Spectate {
@@ -60,6 +58,14 @@ func main() {
 		runCmd(settings.Command, settings.Pause, settings.Verbose)
 	}
 
-	color.Green("\nWatch folder %q, %s", settings.Folder, mode)
+	settings.Logging.Info("Watch folder", logrus.Fields{
+		"folder":       settings.Folder,
+		"action":       mode,
+		"logfile":      CLI.LogFile,
+		"loglevel":     CLI.LogLevel,
+		"lognocolours": CLI.LogNoColors,
+		"logjson":      CLI.LogJSON,
+	})
+
 	watch(settings)
 }
