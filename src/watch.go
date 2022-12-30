@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/radovskyb/watcher"
@@ -45,7 +44,9 @@ func watch(settings tSettings) {
 				}
 				chin <- event
 			case err := <-w.Error:
-				log.Fatalln(err)
+				settings.Logging.Fatal("An error occured", logrus.Fields{
+					"error": err,
+				})
 			case <-w.Closed:
 				return
 			}
@@ -53,7 +54,9 @@ func watch(settings tSettings) {
 	}()
 
 	if err := w.AddRecursive(settings.Folder); err != nil {
-		log.Fatalln(err)
+		settings.Logging.Fatal("Unable to add folders to watch list", logrus.Fields{
+			"error": err,
+		})
 	}
 
 	go func() {
@@ -61,7 +64,9 @@ func watch(settings tSettings) {
 	}()
 
 	if err := w.Start(settings.Interval); err != nil {
-		log.Fatalln(err)
+		settings.Logging.Fatal("Can not start watcher", logrus.Fields{
+			"error": err,
+		})
 	}
 }
 

@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/sirupsen/logrus"
 )
 
@@ -48,23 +47,25 @@ func main() {
 
 	settings.Logging = logging.Init(CLI.LogLevel, CLI.LogFile, CLI.LogNoColors, CLI.LogJSON)
 
-	mode := fmt.Sprintf("command on change: %q", settings.Command)
+	mode := fmt.Sprintf("run on change: %q", settings.Command)
 	if settings.Spectate {
 		mode = "just spectate"
 	}
 
 	if CLI.RunInitially {
-		color.Green("\nRun command initially %q, %+v", settings.Command)
+		settings.Logging.Info("Run initially", logrus.Fields{
+			"cmds": settings.Command,
+		})
 		runCmd(settings.Command, settings.Pause, settings.Verbose)
 	}
 
 	settings.Logging.Info("Watch folder", logrus.Fields{
-		"folder":       settings.Folder,
-		"action":       mode,
-		"logfile":      CLI.LogFile,
-		"loglevel":     CLI.LogLevel,
-		"lognocolours": CLI.LogNoColors,
-		"logjson":      CLI.LogJSON,
+		"folder":         settings.Folder,
+		"action":         mode,
+		"log-file":       CLI.LogFile,
+		"log-level":      CLI.LogLevel,
+		"log-no-colours": CLI.LogNoColors,
+		"log-json":       CLI.LogJSON,
 	})
 
 	watch(settings)
