@@ -1,4 +1,4 @@
-package main
+package watcher
 
 import (
 	"bytes"
@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func runCmd(cmdArr []string, pause time.Duration, verbose bool) ([]byte, int, error) {
+func (w Watcher) runCmd(cmdArr []string, pause time.Duration, verbose bool) ([]byte, int, error) {
 	var err error
 	var exitcode int
 	var stdBuffer bytes.Buffer

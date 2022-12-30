@@ -1,4 +1,4 @@
-package main
+package watcher
 
 import (
 	"bytes"
@@ -9,18 +9,18 @@ import (
 	"github.com/radovskyb/watcher"
 )
 
-func iterTemplate(arr []string, varMap map[string]tVarMapEntry) (r []string) {
+func (w Watcher) iterTemplate(arr []string, varMap map[string]tVarMapEntry) (r []string) {
 	tempMap := make(map[string]interface{})
 	for key, val := range varMap {
 		tempMap[key] = val.Val
 	}
 	for _, el := range arr {
-		r = append(r, execTemplate(el, tempMap))
+		r = append(r, w.execTemplate(el, tempMap))
 	}
 	return
 }
 
-func execTemplate(tplStr string, varMap map[string]interface{}) string {
+func (w Watcher) execTemplate(tplStr string, varMap map[string]interface{}) string {
 	tmpl := template.Must(
 		template.New("new.tmpl").Parse(tplStr),
 	)
@@ -32,8 +32,8 @@ func execTemplate(tplStr string, varMap map[string]interface{}) string {
 	return buf.String()
 }
 
-func printAvailableVars() {
-	vm := makeVarMap(watcher.Event{})
+func (w Watcher) PrintAvailableVars() {
+	vm := w.makeVarMap(watcher.Event{})
 	var iterator []string
 	for el := range vm {
 		iterator = append(iterator, el)
