@@ -2,6 +2,7 @@ package watcher
 
 import (
 	"bytes"
+	"eagle-eye/src/logging"
 	"fmt"
 	"sort"
 	"text/template"
@@ -26,9 +27,7 @@ func (w Watcher) execTemplate(tplStr string, varMap map[string]interface{}) stri
 	)
 	buf := &bytes.Buffer{}
 	err := tmpl.Execute(buf, varMap)
-	if err != nil {
-		panic(err)
-	}
+	w.Conf.Logging.IfErrFatal("Template error", logging.F{"error": err})
 	return buf.String()
 }
 

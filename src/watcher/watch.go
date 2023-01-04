@@ -1,11 +1,11 @@
 package watcher
 
 import (
+	"eagle-eye/src/logging"
 	"fmt"
 	"time"
 
 	"github.com/radovskyb/watcher"
-	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -27,7 +27,7 @@ type tVarMapEntry struct {
 }
 
 func (w Watcher) Run() {
-
+	var err error
 	chin := make(EventChan)
 	go w.ticker(chin)
 	go w.runChannelWatcher(chin)
@@ -42,7 +42,7 @@ func (w Watcher) Run() {
 				}
 				chin <- event
 			case err := <-w.Watcher.Error:
-				w.Conf.Logging.Fatal("An error occured", logrus.Fields{
+				w.Conf.Logging.Fatal("An error occured", logging.F{
 					"error": err,
 				})
 			case <-w.Watcher.Closed:
@@ -51,21 +51,19 @@ func (w Watcher) Run() {
 		}
 	}()
 
-	if err := w.Watcher.AddRecursive(w.Conf.Folder); err != nil {
-		w.Conf.Logging.Fatal("Unable to add folders to watch list", logrus.Fields{
-			"error": err,
-		})
-	}
+	err = w.Watcher.AddRecursive(w.Conf.Folder)
+	w.Conf.Logging.IfErrFatal("Unable to add folders to watch list", logging.F{
+		"error": err,
+	})
 
 	go func() {
 		w.Watcher.Wait()
 	}()
 
-	if err := w.Watcher.Start(w.Conf.Interval); err != nil {
-		w.Conf.Logging.Fatal("Can not start watcher", logrus.Fields{
-			"error": err,
-		})
-	}
+	err = w.Watcher.Start(w.Conf.Interval)
+	w.Conf.Logging.IfErrFatal("Can not start watcher", logging.F{
+		"error": err,
+	})
 }
 
 func (w Watcher) runChannelWatcher(chin EventChan) {
@@ -90,7 +88,7 @@ func (w Watcher) runChannelWatcher(chin EventChan) {
 					cmdArr := w.iterTemplate(
 						w.Conf.Command, w.makeVarMap(ev.Event),
 					)
-					w.Conf.Logging.Info("Run", logrus.Fields{
+					w.Conf.Logging.Info("Run", logging.F{
 						"cmds": cmdArr,
 					})
 					w.runCmd(cmdArr, w.Conf.Pause, w.Conf.Verbose)
@@ -121,13 +119,13 @@ func (w Watcher) printEvent(event watcher.Event) {
 		t = "FOLDER"
 	}
 	if w.Conf.Spectate {
-		w.Conf.Logging.Info("Event", logrus.Fields{
+		w.Conf.Logging.Info("Event", logging.F{
 			"event": event.Op.String(),
 			"path":  fmt.Sprintf(event.Path),
 			"type":  t,
 		})
 	} else {
-		w.Conf.Logging.Debug("Event", logrus.Fields{
+		w.Conf.Logging.Debug("Event", logging.F{
 			"event": event.Op.String(),
 		})
 	}

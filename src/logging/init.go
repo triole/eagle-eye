@@ -2,6 +2,7 @@ package logging
 
 import (
 	"os"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 )
@@ -56,24 +57,23 @@ func Init(loglevel, logFile string, nocolours, JSONLog bool) (lg Logging) {
 		openLogFile, err := os.OpenFile(
 			logFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644,
 		)
-		if err != nil {
-			lg.Fatal(
-				"Can not open log file",
-				logrus.Fields{
-					"logfile": logFile,
-					"error":   err.Error(),
-				},
-			)
-		}
+		lg.IfErrFatal(
+			"Can not open log file",
+			F{
+				"logfile": logFile,
+				"error":   err.Error(),
+			},
+		)
 
-		lg.setLevel(loglevel)
 		lg.Logrus.SetOutput(openLogFile)
 	}
+	lg.setLevel(loglevel)
+
 	return lg
 }
 
 func (lg *Logging) setLevel(level string) {
-	if val, ok := logLevels[level]; ok {
+	if val, ok := logLevels[strings.ToLower(level)]; ok {
 		lg.Logrus.SetLevel(val)
 	} else {
 		lg.setLevel("info")

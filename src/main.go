@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"regexp"
 	"time"
-
-	"github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -35,7 +33,7 @@ func main() {
 		mode = "just spectate"
 	}
 
-	conf.Logging.Info("Watch folder", logrus.Fields{
+	conf.Logging.Info("Watch folder", logging.F{
 		"folder":         conf.Folder,
 		"action":         mode,
 		"log-file":       CLI.LogFile,
