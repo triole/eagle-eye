@@ -1,11 +1,13 @@
 # Eagle Eye ![build](https://github.com/triole/eagle-eye/actions/workflows/build.yaml/badge.svg)
 
-<!--- mdtoc: toc begin -->
+<!-- toc -->
 
-1. [Synopsis](#synopsis)
-2. [Usage](#usage)
-3. [Variables](#variables)
-4. [Disclaimer](#disclaimer)<!--- mdtoc: toc end -->
+- [Synopsis](#synopsis)
+- [Usage](#usage)
+- [Variables](#variables)
+- [Disclaimer](#disclaimer)
+
+<!-- /toc -->
 
 ## Synopsis
 
@@ -34,6 +36,7 @@ ee -n
 ## Variables
 
 ```go mdox-exec="r -n"
+[36mINFO   [0m[2024-09-30 10:17:25.348 CEST] Watch folder                                  [36maction[0m=just spectate [36mfolder[0m=/home/olaf/rolling/golang/projects/eagle-eye/src [36mlog-file[0m=/dev/stdout [36mlog-json[0m=false [36mlog-level[0m=info [36mlog-no-colours[0m=false
 
 The following vars are available:
 
