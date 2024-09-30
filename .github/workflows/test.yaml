@@ -1,0 +1,36 @@
+---
+name: test
+
+on:
+  push:
+    branches: ["master"]
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  test:
+    name: go test
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Install Go
+        env:
+          TARGET_FOLDER: /home/runner/.local/go
+        run: curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/go_install.sh
+          | bash
+      - name: Add packages in sub folders to GOROOT
+        env:
+          GOROOT: /home/runner/.local/go
+          SOURCE_FOLDER: src
+        run: curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/go_add_sub_packages.sh
+          | bash
+      - name: run tests
+        env:
+          GOROOT: /home/runner/.local/go
+          SOURCE_FOLDER: src
+        run: curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/go_test.sh
+          | bash

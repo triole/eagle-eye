@@ -1,3 +1,4 @@
+---
 name: build
 
 on:
@@ -6,41 +7,54 @@ on:
       - '*'
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
-        steps:
-            -
-                name: Checkout
-                uses: actions/checkout@v2
-                with:
-                    fetch-depth: 0
-            -
-                name: Make github config
-                run: curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/make_github_config.sh | bash
-            -
-                name: Install Go
-                env:
-                    TARGET_FOLDER: /home/runner/.local/go
-                run: curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/go_install.sh | bash
-            -
-                name: Build
-                env:
-                    GOROOT: /home/runner/.local/go
-                    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                    APP_NAME: ee
-                    SOURCE_FOLDER: src
-                    # TARGET_FOLDER: build
-                run: curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/go_build.sh | bash
-            -
-                name: Gzip assets
-                env:
-                    SOURCE_FOLDER: build
-                    # VERSION_COMMAND: date +%y.%m.%d
-                run: curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/gzip_builds.sh | bash
-            -
-                name: Upload release binaries
-                uses: alexellis/upload-assets@0.3.0
-                env:
-                    GITHUB_TOKEN: ${{ github.token }}
-                with:
-                    asset_paths: '["/tmp/assets/*"]'
+  test:
+    uses: ./.github/workflows/test.yaml
+    permissions: write-all
+  release:
+    needs:
+      - test
+    name: make release
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Make github config
+        run: curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/make_github_config.sh
+          | bash
+      - name: Install Go
+        env:
+          TARGET_FOLDER: /home/runner/.local/go
+        run: curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/go_install.sh
+          | bash
+      - name: Add packages in sub folders to GOROOT
+        env:
+          GOROOT: /home/runner/.local/go
+          SOURCE_FOLDER: src
+        run: curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/go_add_sub_packages.sh
+          | bash
+      - name: Build
+        env:
+          GOROOT: /home/runner/.local/go
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APP_NAME: ee
+          SOURCE_FOLDER: src
+          # TARGET_FOLDER: build
+        run: curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/go_build.sh
+          | bash
+      - name: Gzip assets
+        # env:
+        # SOURCE_FOLDER: build
+        # TARGET_FOLDER: /tmp/assets
+        # VERSION_COMMAND: date +%y.%m.%d
+        run: curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/gzip_builds.sh
+          | bash
+      - if: ${{ !env.ACT }}
+        name: Upload release binaries
+        uses: alexellis/upload-assets@0.3.0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          asset_paths: '["/tmp/assets/*"]'
