@@ -12,13 +12,11 @@ var (
 	lastRun time.Time
 )
 
-// Event holds an event and its time
 type Event struct {
 	Time  time.Time
 	Event watcher.Event
 }
 
-// EventChan holds what is pushed into the processing channels
 type EventChan chan Event
 
 type tVarMapEntry struct {
@@ -67,32 +65,29 @@ func (w Watcher) Run() {
 }
 
 func (w Watcher) runChannelWatcher(chin EventChan) {
-	current := time.Now()
-	last := time.Now().Add(-time.Second * (w.Conf.Interval * 2))
-	diff := current.Sub(last) > w.Conf.Interval-w.Conf.Interval/4
-	var lastDiff bool
+	// cache config values for better performance
+	interval := w.Conf.Interval
+	spectate := w.Conf.Spectate
+	keepOutput := w.Conf.KeepOutput
+	pause := w.Conf.Pause
+	verbose := w.Conf.Verbose
+	command := w.Conf.Command
+
 	for ev := range chin {
 		if ev.Event.Op > 0 {
-			if w.calcDiff(lastRun, w.Conf.Interval) && !w.Conf.Spectate {
-				if !w.Conf.KeepOutput {
+			if !spectate && w.calcDiff(lastRun, interval) {
+				if !keepOutput {
 					fmt.Print("\033[2J")
 					fmt.Print("\033[H")
 				}
-				now := time.Now()
-				lastRun = now
-				lastDiff = diff
-				last = current
-				current = ev.Time
-				if lastDiff && w.calcDiff(last, w.Conf.Interval) {
-					lastRun = time.Now()
-					cmdArr := w.iterTemplate(
-						w.Conf.Command, w.makeVarMap(ev.Event),
-					)
-					w.Conf.Lg.Info("Run", logseal.F{
-						"cmds": cmdArr,
-					})
-					w.runCmd(cmdArr, w.Conf.Pause, w.Conf.Verbose)
-				}
+
+				lastRun = time.Now()
+
+				cmdArr := w.iterTemplate(command, w.makeVarMap(ev.Event))
+				w.Conf.Lg.Info("Run", logseal.F{
+					"cmds": cmdArr,
+				})
+				w.runCmd(cmdArr, pause, verbose)
 			} else {
 				w.printEvent(ev.Event)
 			}
