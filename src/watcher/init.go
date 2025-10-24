@@ -2,9 +2,9 @@ package watcher
 
 import (
 	"eagle-eye/src/conf"
-	"eagle-eye/src/logging"
 
 	"github.com/radovskyb/watcher"
+	"github.com/triole/logseal"
 )
 
 type Watcher struct {
@@ -20,7 +20,7 @@ func Init(conf conf.Conf) (w Watcher) {
 	w.Watcher.AddFilterHook(watcher.RegexFilterHook(conf.Regex, false))
 
 	if w.Conf.RunInitially {
-		conf.Logging.Info("Run initially", logging.F{
+		conf.Lg.Info("Run initially", logseal.F{
 			"cmds": conf.Command,
 		})
 		w.runCmd(conf.Command, conf.Pause, conf.Verbose)

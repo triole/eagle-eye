@@ -26,10 +26,10 @@ var CLI struct {
 	Pause        int32    `help:"pause before running the command (seconds)" default:"0" short:"p"`
 	RunInitially bool     `help:"run command initially, normal behaviour is to run on first change of files"`
 	KeepOutput   bool     `help:"keep output, do not clear screen when running command" short:"k"`
-	LogFile      string   `help:"log file" short:"l" default:"/dev/stdout"`
-	LogLevel     string   `help:"log level" short:"e" default:"info" enum:"debug,info,error"`
-	LogNoColors  bool     `help:"disable output colours, print plain text" short:"c"`
-	LogJSON      bool     `help:"enable json log, instead of text one" short:"j"`
+	LogFile      string   `help:"log file" default:"/dev/stdout"`
+	LogLevel     string   `help:"log level" default:"info" enum:"trace,debug,info,error,fatal"`
+	LogNoColors  bool     `help:"disable output colours, print plain text"`
+	LogJSON      bool     `help:"enable json log, instead of text one"`
 	PrintVars    bool     `help:"print a list of available variables" short:"n"`
 	VersionFlag  bool     `help:"display version" short:"V"`
 }

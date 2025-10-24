@@ -1,9 +1,10 @@
 package conf
 
 import (
-	"eagle-eye/src/logging"
 	"regexp"
 	"time"
+
+	"github.com/triole/logseal"
 )
 
 type Conf struct {
@@ -15,7 +16,7 @@ type Conf struct {
 	Spectate     bool
 	KeepOutput   bool
 	RunInitially bool
-	Logging      logging.Logging
+	Lg           logseal.Logseal
 	LogInit      bool
 	Verbose      bool
 }

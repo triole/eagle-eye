@@ -2,12 +2,12 @@ package watcher
 
 import (
 	"bytes"
-	"eagle-eye/src/logging"
 	"fmt"
 	"sort"
 	"text/template"
 
 	"github.com/radovskyb/watcher"
+	"github.com/triole/logseal"
 )
 
 func (w Watcher) iterTemplate(arr []string, varMap map[string]tVarMapEntry) (r []string) {
@@ -27,7 +27,7 @@ func (w Watcher) execTemplate(tplStr string, varMap map[string]interface{}) stri
 	)
 	buf := &bytes.Buffer{}
 	err := tmpl.Execute(buf, varMap)
-	w.Conf.Logging.IfErrFatal("Template error", logging.F{"error": err})
+	w.Conf.Lg.IfErrFatal("Template error", logseal.F{"error": err})
 	return buf.String()
 }
 

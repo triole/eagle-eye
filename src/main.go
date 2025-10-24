@@ -2,11 +2,12 @@ package main
 
 import (
 	"eagle-eye/src/conf"
-	"eagle-eye/src/logging"
 	"eagle-eye/src/watcher"
 	"fmt"
 	"regexp"
 	"time"
+
+	"github.com/triole/logseal"
 )
 
 func main() {
@@ -26,14 +27,14 @@ func main() {
 		conf.Spectate = true
 	}
 
-	conf.Logging = logging.Init(CLI.LogLevel, CLI.LogFile, CLI.LogNoColors, CLI.LogJSON)
+	conf.Lg = logseal.Init(CLI.LogLevel, CLI.LogFile, CLI.LogNoColors, CLI.LogJSON)
 
 	mode := fmt.Sprintf("run on change: %q", conf.Command)
 	if conf.Spectate {
-		mode = "just spectate"
+		mode = "spectate"
 	}
 
-	conf.Logging.Info("Watch folder", logging.F{
+	conf.Lg.Info("Watch folder", logseal.F{
 		"folder":         conf.Folder,
 		"action":         mode,
 		"log-file":       CLI.LogFile,

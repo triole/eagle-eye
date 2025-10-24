@@ -1,11 +1,11 @@
 package watcher
 
 import (
-	"eagle-eye/src/logging"
 	"fmt"
 	"time"
 
 	"github.com/radovskyb/watcher"
+	"github.com/triole/logseal"
 )
 
 var (
@@ -42,7 +42,7 @@ func (w Watcher) Run() {
 				}
 				chin <- event
 			case err := <-w.Watcher.Error:
-				w.Conf.Logging.Fatal("An error occured", logging.F{
+				w.Conf.Lg.Fatal("An error occured", logseal.F{
 					"error": err,
 				})
 			case <-w.Watcher.Closed:
@@ -52,7 +52,7 @@ func (w Watcher) Run() {
 	}()
 
 	err = w.Watcher.AddRecursive(w.Conf.Folder)
-	w.Conf.Logging.IfErrFatal("Unable to add folders to watch list", logging.F{
+	w.Conf.Lg.IfErrFatal("Unable to add folders to watch list", logseal.F{
 		"error": err,
 	})
 
@@ -61,7 +61,7 @@ func (w Watcher) Run() {
 	}()
 
 	err = w.Watcher.Start(w.Conf.Interval)
-	w.Conf.Logging.IfErrFatal("Can not start watcher", logging.F{
+	w.Conf.Lg.IfErrFatal("Can not start watcher", logseal.F{
 		"error": err,
 	})
 }
@@ -88,7 +88,7 @@ func (w Watcher) runChannelWatcher(chin EventChan) {
 					cmdArr := w.iterTemplate(
 						w.Conf.Command, w.makeVarMap(ev.Event),
 					)
-					w.Conf.Logging.Info("Run", logging.F{
+					w.Conf.Lg.Info("Run", logseal.F{
 						"cmds": cmdArr,
 					})
 					w.runCmd(cmdArr, w.Conf.Pause, w.Conf.Verbose)
@@ -119,13 +119,16 @@ func (w Watcher) printEvent(event watcher.Event) {
 		t = "FOLDER"
 	}
 	if w.Conf.Spectate {
-		w.Conf.Logging.Info("Event", logging.F{
-			"event": event.Op.String(),
-			"path":  fmt.Sprintf(event.Path),
-			"type":  t,
-		})
+		w.Conf.Lg.Info(
+			"Event",
+			logseal.F{
+				"event": event.Op.String(),
+				"path":  fmt.Sprintf(event.Path),
+				"type":  t,
+			},
+		)
 	} else {
-		w.Conf.Logging.Debug("Event", logging.F{
+		w.Conf.Lg.Debug("Event", logseal.F{
 			"event": event.Op.String(),
 		})
 	}
