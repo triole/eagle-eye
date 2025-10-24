@@ -14,4 +14,4 @@ for n in $(seq 1 ${max}); do
     bs=1 count=$((RANDOM + 1024))
 done
 
-rm "${tmpdir}/*"
+[[ -d "${tmpdir}" ]] && rm ${tmpdir}/*
