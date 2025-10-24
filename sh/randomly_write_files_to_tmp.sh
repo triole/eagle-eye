@@ -3,7 +3,11 @@ scriptdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 basedir="${scriptdir%/*}"
 tmpdir="${basedir}/tmp"
 
-for n in {1..16}; do
+max="${1}"
+
+[[ -z "${max}" ]] && max=16
+
+for n in $(seq 1 ${max}); do
   dd \
     if=/dev/urandom \
     of=${tmpdir}/file$(printf %03d "$n").bin \
