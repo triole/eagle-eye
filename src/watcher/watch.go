@@ -118,7 +118,7 @@ func (w Watcher) printEvent(event watcher.Event) {
 			"Event",
 			logseal.F{
 				"event": event.Op.String(),
-				"path":  fmt.Sprintf(event.Path),
+				"path":  fmt.Sprintf("%s", event.Path),
 				"type":  t,
 			},
 		)
