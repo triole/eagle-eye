@@ -1,49 +1,48 @@
+---
 version: '3'
 
 vars:
-    SOURCE_FOLDER: src
+  SOURCE_FOLDER: src
 
 tasks:
-    default:
-        cmds:
-            - cmd: echo {{.GO_FILES}}
-            - cmd: exit 1
-            - task: test
-            - task: build
+  default:
+    cmds:
+      - cmd: echo {{.GO_FILES}}
+      - cmd: exit 1
+      - task: test
+      - task: build
 
-    mod:
-        desc: update go modules, add submodules to go root
-        cmds:
-            - cmd: |
-                export SOURCE_FOLDER={{.SOURCE_FOLDER}}
-                curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/go_add_sub_packages.sh | bash
+  mod:
+    desc: update go modules, add submodules to go root
+    cmds:
+      - cmd: |
+          export SOURCE_FOLDER={{.SOURCE_FOLDER}}
+          curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/go_add_sub_packages.sh | bash
 
-    build:
-        desc: build binary using remote ghwfe script, requires curl
-        cmds:
-            - cmd: |
-                export SOURCE_FOLDER={{.SOURCE_FOLDER}}
-                export APP_NAME=ee
-                curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/go_build.sh | bash
+  build:
+    desc: build binary using remote ghwfe script, requires curl
+    cmds:
+      - cmd: |
+          export SOURCE_FOLDER={{.SOURCE_FOLDER}}
+          export APP_NAME=ee
+          curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/go_build.sh | bash
 
-    test:
-        desc: run go tests
-        sources:
-            - "{{.SOURCE_FOLDER}}/*"
-        method: timestamp
-        cmds:
-            - cmd: >-
-                for fol in {{.MODULES}}; do
-                    echo -e "\nTest ${fol}"
-                    cd "${fol}"
-                    go test -trace go.trace -race -cover -bench=. .
-                done
-        vars:
-            MODULES:
-                sh: find $(pwd)/src -maxdepth 1 -type d | sort | tr '\n' ' '
+  test:
+    desc: run go tests
+    cmds:
+      - cmd: >-
+          for fol in {{.MODULES}}; do
+              echo -e "\nTest ${fol}"
+              cd "${fol}"
+              go test -trace go.trace -race -cover -bench=. .
+          done
+    vars:
+      MODULES:
+        sh: find $(pwd)/src -maxdepth 1 -type d | sort | tr '\n'
+          ' '
 
-    deploy:
-        desc: build and copy to my personal arch mybins folder
-        cmds:
-            - task: build
-            - cmd: cp -rpf build/* ${HOME}/tools/arch/mybins/
+  deploy:
+    desc: build and copy to my personal arch mybins folder
+    cmds:
+      - task: build
+      - cmd: cp -rpf build/* ${HOME}/tools/arch/mybins/
