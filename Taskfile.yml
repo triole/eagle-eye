@@ -1,14 +1,15 @@
 ---
 version: '3'
 
+env:
+  APP_NAME: ee
+
 vars:
   SOURCE_FOLDER: src
 
 tasks:
   default:
     cmds:
-      - cmd: echo {{.GO_FILES}}
-      - cmd: exit 1
       - task: test
       - task: build
 
@@ -24,22 +25,12 @@ tasks:
     cmds:
       - cmd: |
           export SOURCE_FOLDER={{.SOURCE_FOLDER}}
-          export APP_NAME=ee
           curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/go_build.sh | bash
 
   test:
     desc: run go tests
     cmds:
-      - cmd: >-
-          for fol in {{.MODULES}}; do
-              echo -e "\nTest ${fol}"
-              cd "${fol}"
-              go test -trace go.trace -race -cover -bench=. .
-          done
-    vars:
-      MODULES:
-        sh: find $(pwd)/src -maxdepth 1 -type d | sort | tr '\n'
-          ' '
+      - cmd: go test ./... -v -coverpkg=./... -race -bench=.
 
   deploy:
     desc: build and copy to my personal arch mybins folder
