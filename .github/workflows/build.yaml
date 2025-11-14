@@ -25,19 +25,15 @@ jobs:
         run: curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/make_github_config.sh
           | bash
       - name: Install Go
-        env:
-          TARGET_FOLDER: /home/runner/.local/go
         run: curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/go_install.sh
           | bash
       - name: Add packages in sub folders to GOROOT
         env:
-          GOROOT: /home/runner/.local/go
           SOURCE_FOLDER: src
         run: curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/go_add_sub_packages.sh
           | bash
       - name: Build
         env:
-          GOROOT: /home/runner/.local/go
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APP_NAME: ee
           SOURCE_FOLDER: src
