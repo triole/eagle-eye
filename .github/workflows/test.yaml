@@ -13,20 +13,26 @@ jobs:
     permissions: write-all
     runs-on: ubuntu-latest
     steps:
+      - name: Install dependencies
+        run: >
+          sudo apt install -y curl
       - name: Checkout
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
       - name: Install Go
-        run: curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/go_install.sh
-          | bash
+        run: >
+          curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/go_install.sh
+          | bash -s -- --sudo
       - name: Add packages in sub folders to GOROOT
         env:
           SOURCE_FOLDER: src
-        run: curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/go_add_sub_packages.sh
+        run: >
+          curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/go_add_sub_packages.sh
           | bash
       - name: run tests
         env:
           SOURCE_FOLDER: src
-        run: curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/go_test.sh
+        run: >
+          echo ${PATH} & curl -sL https://raw.githubusercontent.com/triole/ghwfe/master/sh/go_test.sh
           | bash
