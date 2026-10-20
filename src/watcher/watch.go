@@ -2,6 +2,7 @@ package watcher
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/radovskyb/watcher"
@@ -9,8 +10,33 @@ import (
 )
 
 var (
-	lastRun time.Time
+	lastRun     time.Time
+	debounceMu  sync.Mutex    // Mutex to protect debounce state
+	debounceEnd time.Time     // End time of debounce period
+	debounceCh  chan struct{} // Channel to signal debounce complete
 )
+
+// waitForDebounce blocks until the debounce period has elapsed
+func waitForDebounce(debounce time.Duration) {
+	if debounce == 0 {
+		return
+	}
+	debounceMu.Lock()
+	debounceEnd = time.Now().Add(debounce)
+	debounceMu.Unlock()
+	<-time.After(debounce)
+}
+
+// shouldDebounce checks if we should wait before running the command
+// Returns true if we should skip execution (still in debounce period)
+func shouldDebounce() bool {
+	debounceMu.Lock()
+	defer debounceMu.Unlock()
+	if time.Now().Before(debounceEnd) {
+		return true
+	}
+	return false
+}
 
 type Event struct {
 	Time  time.Time
@@ -72,10 +98,20 @@ func (w Watcher) runChannelWatcher(chin EventChan) {
 	pause := w.Conf.Pause
 	verbose := w.Conf.Verbose
 	command := w.Conf.Command
+	debounce := w.Conf.Debounce
 
 	for ev := range chin {
 		if ev.Event.Op > 0 {
 			if !spectate && w.calcDiff(lastRun, interval) {
+				// Wait for debounce period to complete if there's pending activity
+				waitForDebounce(debounce)
+
+				// Check if we're still in debounce period (another event may have extended it)
+				if shouldDebounce() {
+					w.printEvent(ev.Event)
+					continue
+				}
+
 				if !keepOutput {
 					fmt.Print("\033[2J")
 					fmt.Print("\033[H")

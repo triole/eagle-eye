@@ -18,6 +18,7 @@ func main() {
 	conf.Folder = CLI.Folder
 	conf.Interval = time.Duration(CLI.Interval) * time.Second
 	conf.Pause = time.Duration(CLI.Pause) * time.Second
+	conf.Debounce = time.Duration(CLI.Debounce) * time.Millisecond
 	conf.Regex = regexp.MustCompile(CLI.Regex)
 	conf.Spectate = CLI.Spectate
 	conf.KeepOutput = CLI.KeepOutput
