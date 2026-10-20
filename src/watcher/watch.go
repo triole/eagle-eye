@@ -2,7 +2,6 @@ package watcher
 
 import (
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/radovskyb/watcher"
@@ -21,19 +20,24 @@ type tVarMapEntry struct {
 	Desc string
 }
 
-var (
-	lastRunTime   time.Time   // Last time a command was executed
-	debounceMu    sync.Mutex  // Mutex to protect debounce timer
-	debounceTimer *time.Timer // Timer for debounce delay
-)
+func (w *Watcher) shutdown() {
+	// Stop any pending debounce timer
+	w.debounceMu.Lock()
+	if w.debounceTimer != nil {
+		w.debounceTimer.Stop()
+		w.debounceTimer = nil
+	}
+	w.debounceMu.Unlock()
+}
 
-func (w Watcher) Run() {
+func (w *Watcher) Run() {
 	var err error
-	chin := make(EventChan)
+	chin := make(EventChan, 10) // Buffered channel to prevent unbounded growth
 	go w.ticker(chin)
 	go w.runChannelWatcher(chin)
 
 	go func() {
+		defer w.shutdown() // Graceful shutdown: cancel pending timer on exit
 		for {
 			select {
 			case ev := <-w.Watcher.Event:
@@ -41,7 +45,11 @@ func (w Watcher) Run() {
 					Time:  time.Now(),
 					Event: ev,
 				}
-				chin <- event
+				select {
+				case chin <- event: // Non-blocking send for file events
+				default:
+					// Drop if channel is full
+				}
 			case err := <-w.Watcher.Error:
 				w.Conf.Lg.Fatal("An error occured", logseal.F{
 					"error": err,
@@ -67,7 +75,7 @@ func (w Watcher) Run() {
 	})
 }
 
-func (w Watcher) runChannelWatcher(chin EventChan) {
+func (w *Watcher) runChannelWatcher(chin EventChan) {
 	// cache config values for better performance
 	interval := w.Conf.Interval
 	spectate := w.Conf.Spectate
@@ -78,8 +86,9 @@ func (w Watcher) runChannelWatcher(chin EventChan) {
 	debounce := w.Conf.Debounce
 
 	for ev := range chin {
+		// Only process actual file events (Op > 0), ignore ticker events
 		if ev.Event.Op > 0 {
-			if !spectate && w.calcDiff(lastRunTime, interval) {
+			if !spectate && w.calcDiff(w.lastRunTime, interval) {
 				// Only execute immediately if debounce is disabled
 				if debounce == 0 {
 					w.executeCommand(ev.Event, command, keepOutput, pause, verbose)
@@ -95,29 +104,30 @@ func (w Watcher) runChannelWatcher(chin EventChan) {
 }
 
 // startDebounceTimer starts or resets the debounce timer for command execution
-func (w Watcher) startDebounceTimer(event watcher.Event, command []string, keepOutput bool, pause time.Duration, verbose bool) {
+// Each watcher instance has its own timer, allowing multiple watchers to run independently
+func (w *Watcher) startDebounceTimer(event watcher.Event, command []string, keepOutput bool, pause time.Duration, verbose bool) {
 	debounceDuration := w.Conf.Debounce
 
-	debounceMu.Lock()
-	if debounceTimer != nil {
-		debounceTimer.Stop()
+	w.debounceMu.Lock()
+	if w.debounceTimer != nil {
+		w.debounceTimer.Stop()
 	}
 
-	debounceTimer = time.AfterFunc(debounceDuration, func() {
+	w.debounceTimer = time.AfterFunc(debounceDuration, func() {
 		// Release lock before executing to avoid deadlock
 		w.executeCommand(event, command, keepOutput, pause, verbose)
 	})
-	debounceMu.Unlock()
+	w.debounceMu.Unlock()
 }
 
 // executeCommand runs the command with proper formatting and logging
-func (w Watcher) executeCommand(event watcher.Event, command []string, keepOutput bool, pause time.Duration, verbose bool) {
+func (w *Watcher) executeCommand(event watcher.Event, command []string, keepOutput bool, pause time.Duration, verbose bool) {
 	if !keepOutput {
 		fmt.Print("\033[2J")
 		fmt.Print("\033[H")
 	}
 
-	lastRunTime = time.Now()
+	w.lastRunTime = time.Now()
 
 	cmdArr := w.iterTemplate(command, w.makeVarMap(event))
 	w.Conf.Lg.Info("Run", logseal.F{
@@ -126,20 +136,24 @@ func (w Watcher) executeCommand(event watcher.Event, command []string, keepOutpu
 	w.runCmd(cmdArr, pause, verbose)
 }
 
-func (w Watcher) calcDiff(lastRun time.Time, interval time.Duration) bool {
+func (w *Watcher) calcDiff(lastRun time.Time, interval time.Duration) bool {
 	return time.Since(lastRun) > interval
 }
 
-func (w Watcher) ticker(chin EventChan) {
+func (w *Watcher) ticker(chin EventChan) {
 	for range time.Tick(time.Duration(1) * time.Second) {
 		event := Event{
 			Time: time.Now(),
 		}
-		chin <- event
+		select {
+		case chin <- event:
+		default:
+			// Drop tick event if channel is full to prevent backlog
+		}
 	}
 }
 
-func (w Watcher) printEvent(event watcher.Event) {
+func (w *Watcher) printEvent(event watcher.Event) {
 	t := "FILE"
 	if event.IsDir() {
 		t = "FOLDER"
@@ -160,7 +174,7 @@ func (w Watcher) printEvent(event watcher.Event) {
 	}
 }
 
-func (w Watcher) makeVarMap(ev watcher.Event) (varMap map[string]tVarMapEntry) {
+func (w *Watcher) makeVarMap(ev watcher.Event) (varMap map[string]tVarMapEntry) {
 	varMap = make(map[string]tVarMapEntry)
 	varMap["file"] = tVarMapEntry{
 		ev.Path, "file that triggered the event",

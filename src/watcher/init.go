@@ -2,14 +2,19 @@ package watcher
 
 import (
 	"eagle-eye/src/conf"
+	"sync"
+	"time"
 
 	"github.com/radovskyb/watcher"
 	"github.com/triole/logseal"
 )
 
 type Watcher struct {
-	Conf    conf.Conf
-	Watcher *watcher.Watcher
+	Conf          conf.Conf
+	Watcher       *watcher.Watcher
+	lastRunTime   time.Time
+	debounceMu    sync.Mutex
+	debounceTimer *time.Timer
 }
 
 func Init(conf conf.Conf) (w Watcher) {

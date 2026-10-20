@@ -10,7 +10,7 @@ import (
 	"github.com/triole/logseal"
 )
 
-func (w Watcher) iterTemplate(arr []string, varMap map[string]tVarMapEntry) (r []string) {
+func (w *Watcher) iterTemplate(arr []string, varMap map[string]tVarMapEntry) (r []string) {
 	tempMap := make(map[string]interface{})
 	for key, val := range varMap {
 		tempMap[key] = val.Val
@@ -21,7 +21,7 @@ func (w Watcher) iterTemplate(arr []string, varMap map[string]tVarMapEntry) (r [
 	return
 }
 
-func (w Watcher) execTemplate(tplStr string, varMap map[string]interface{}) string {
+func (w *Watcher) execTemplate(tplStr string, varMap map[string]interface{}) string {
 	tmpl := template.Must(
 		template.New("new.tmpl").Parse(tplStr),
 	)
@@ -31,7 +31,7 @@ func (w Watcher) execTemplate(tplStr string, varMap map[string]interface{}) stri
 	return buf.String()
 }
 
-func (w Watcher) PrintAvailableVars() {
+func (w *Watcher) PrintAvailableVars() {
 	vm := w.makeVarMap(watcher.Event{})
 	var iterator []string
 	for el := range vm {
