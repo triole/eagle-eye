@@ -9,35 +9,6 @@ import (
 	"github.com/triole/logseal"
 )
 
-var (
-	lastRun     time.Time
-	debounceMu  sync.Mutex    // Mutex to protect debounce state
-	debounceEnd time.Time     // End time of debounce period
-	debounceCh  chan struct{} // Channel to signal debounce complete
-)
-
-// waitForDebounce blocks until the debounce period has elapsed
-func waitForDebounce(debounce time.Duration) {
-	if debounce == 0 {
-		return
-	}
-	debounceMu.Lock()
-	debounceEnd = time.Now().Add(debounce)
-	debounceMu.Unlock()
-	<-time.After(debounce)
-}
-
-// shouldDebounce checks if we should wait before running the command
-// Returns true if we should skip execution (still in debounce period)
-func shouldDebounce() bool {
-	debounceMu.Lock()
-	defer debounceMu.Unlock()
-	if time.Now().Before(debounceEnd) {
-		return true
-	}
-	return false
-}
-
 type Event struct {
 	Time  time.Time
 	Event watcher.Event
@@ -49,6 +20,12 @@ type tVarMapEntry struct {
 	Val  interface{}
 	Desc string
 }
+
+var (
+	lastRunTime   time.Time   // Last time a command was executed
+	debounceMu    sync.Mutex  // Mutex to protect debounce timer
+	debounceTimer *time.Timer // Timer for debounce delay
+)
 
 func (w Watcher) Run() {
 	var err error
@@ -102,33 +79,51 @@ func (w Watcher) runChannelWatcher(chin EventChan) {
 
 	for ev := range chin {
 		if ev.Event.Op > 0 {
-			if !spectate && w.calcDiff(lastRun, interval) {
-				// Wait for debounce period to complete if there's pending activity
-				waitForDebounce(debounce)
-
-				// Check if we're still in debounce period (another event may have extended it)
-				if shouldDebounce() {
-					w.printEvent(ev.Event)
-					continue
+			if !spectate && w.calcDiff(lastRunTime, interval) {
+				// Only execute immediately if debounce is disabled
+				if debounce == 0 {
+					w.executeCommand(ev.Event, command, keepOutput, pause, verbose)
+				} else {
+					// Start or reset the debounce timer
+					w.startDebounceTimer(ev.Event, command, keepOutput, pause, verbose)
 				}
-
-				if !keepOutput {
-					fmt.Print("\033[2J")
-					fmt.Print("\033[H")
-				}
-
-				lastRun = time.Now()
-
-				cmdArr := w.iterTemplate(command, w.makeVarMap(ev.Event))
-				w.Conf.Lg.Info("Run", logseal.F{
-					"cmds": cmdArr,
-				})
-				w.runCmd(cmdArr, pause, verbose)
 			} else {
 				w.printEvent(ev.Event)
 			}
 		}
 	}
+}
+
+// startDebounceTimer starts or resets the debounce timer for command execution
+func (w Watcher) startDebounceTimer(event watcher.Event, command []string, keepOutput bool, pause time.Duration, verbose bool) {
+	debounceDuration := w.Conf.Debounce
+
+	debounceMu.Lock()
+	if debounceTimer != nil {
+		debounceTimer.Stop()
+	}
+
+	debounceTimer = time.AfterFunc(debounceDuration, func() {
+		// Release lock before executing to avoid deadlock
+		w.executeCommand(event, command, keepOutput, pause, verbose)
+	})
+	debounceMu.Unlock()
+}
+
+// executeCommand runs the command with proper formatting and logging
+func (w Watcher) executeCommand(event watcher.Event, command []string, keepOutput bool, pause time.Duration, verbose bool) {
+	if !keepOutput {
+		fmt.Print("\033[2J")
+		fmt.Print("\033[H")
+	}
+
+	lastRunTime = time.Now()
+
+	cmdArr := w.iterTemplate(command, w.makeVarMap(event))
+	w.Conf.Lg.Info("Run", logseal.F{
+		"cmds": cmdArr,
+	})
+	w.runCmd(cmdArr, pause, verbose)
 }
 
 func (w Watcher) calcDiff(lastRun time.Time, interval time.Duration) bool {
