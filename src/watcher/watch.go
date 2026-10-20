@@ -33,7 +33,6 @@ func (w *Watcher) shutdown() {
 func (w *Watcher) Run() {
 	var err error
 	chin := make(EventChan, 10) // Buffered channel to prevent unbounded growth
-	go w.ticker(chin)
 	go w.runChannelWatcher(chin)
 
 	go func() {
@@ -86,7 +85,6 @@ func (w *Watcher) runChannelWatcher(chin EventChan) {
 	debounce := w.Conf.Debounce
 
 	for ev := range chin {
-		// Only process actual file events (Op > 0), ignore ticker events
 		if ev.Event.Op > 0 {
 			if !spectate && w.calcDiff(w.lastRunTime, interval) {
 				// Only execute immediately if debounce is disabled
@@ -138,19 +136,6 @@ func (w *Watcher) executeCommand(event watcher.Event, command []string, keepOutp
 
 func (w *Watcher) calcDiff(lastRun time.Time, interval time.Duration) bool {
 	return time.Since(lastRun) > interval
-}
-
-func (w *Watcher) ticker(chin EventChan) {
-	for range time.Tick(time.Duration(1) * time.Second) {
-		event := Event{
-			Time: time.Now(),
-		}
-		select {
-		case chin <- event:
-		default:
-			// Drop tick event if channel is full to prevent backlog
-		}
-	}
 }
 
 func (w *Watcher) printEvent(event watcher.Event) {
