@@ -2,7 +2,7 @@ package watcher
 
 import "regexp"
 
-func (w *Watcher) rxfind(rx string, content string) (r string) {
+func (w *Watcher) matchRegex(rx string, content string) (result string) {
 	// Try to get compiled regex from cache (read lock)
 	w.regexMu.RLock()
 	compiled, cached := w.regexCache[rx]
@@ -24,7 +24,7 @@ func (w *Watcher) rxfind(rx string, content string) (r string) {
 	if err != nil {
 		w.regexCache[rx] = nil
 		w.regexMu.Unlock()
-		return ""
+		return result
 	}
 
 	w.regexCache[rx] = temp

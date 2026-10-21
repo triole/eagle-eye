@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestWatcher_rxfind(t *testing.T) {
+func TestWatcher_matchRegex(t *testing.T) {
 	w := Watcher{}
 
 	tests := []struct {
@@ -65,9 +65,9 @@ func TestWatcher_rxfind(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := w.rxfind(tt.rx, tt.content)
+			result := w.matchRegex(tt.rx, tt.content)
 			if result != tt.expected {
-				t.Errorf("rxfind(%q, %q) = %q, want %q", tt.rx, tt.content, result, tt.expected)
+				t.Errorf("matchRegex(%q, %q) = %q, want %q", tt.rx, tt.content, result, tt.expected)
 			}
 		})
 	}
