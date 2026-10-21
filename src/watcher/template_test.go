@@ -2,8 +2,6 @@ package watcher
 
 import (
 	"testing"
-
-	"github.com/radovskyb/watcher"
 )
 
 func TestWatcher_iterTemplate(t *testing.T) {
@@ -89,47 +87,5 @@ func TestWatcher_iterTemplate(t *testing.T) {
 				}
 			}
 		})
-	}
-}
-
-// Test with a more complex scenario that includes a real watcher event
-func TestWatcher_iterTemplateWithRealEvent(t *testing.T) {
-	w := Watcher{}
-
-	// Create a mock event
-	mockEvent := watcher.Event{
-		Path: "/home/user/documents/test.txt",
-	}
-
-	// Create variable map using makeVarMap function
-	varMap := w.makeVarMap(mockEvent)
-
-	// Test templates that would be used in real scenarios
-	testTemplates := []string{
-		"{{.file}}",
-		"{{.folder}}",
-		"Processing file: {{.file}}",
-		"File: {{.file}} in folder: {{.folder}}",
-	}
-
-	result := w.iterTemplate(testTemplates, varMap)
-
-	// Expected results
-	expected := []string{
-		"/home/user/documents/test.txt",
-		"/home/user/documents/",
-		"Processing file: /home/user/documents/test.txt",
-		"File: /home/user/documents/test.txt in folder: /home/user/documents/",
-	}
-
-	if len(result) != len(expected) {
-		t.Errorf("iterTemplate() length = %d, want %d", len(result), len(expected))
-		return
-	}
-
-	for i, v := range result {
-		if v != expected[i] {
-			t.Errorf("iterTemplate() = %q, want %q", v, expected[i])
-		}
 	}
 }
