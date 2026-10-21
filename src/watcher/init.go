@@ -2,6 +2,7 @@ package watcher
 
 import (
 	"eagle-eye/src/conf"
+	"regexp"
 	"sync"
 	"time"
 
@@ -15,12 +16,15 @@ type Watcher struct {
 	lastRunTime   time.Time
 	debounceMu    sync.Mutex
 	debounceTimer *time.Timer
+	regexMu       sync.RWMutex
+	regexCache    map[string]*regexp.Regexp
 }
 
 func Init(conf conf.Conf) (w Watcher) {
 	w = Watcher{
-		Conf:    conf,
-		Watcher: watcher.New(),
+		Conf:       conf,
+		Watcher:    watcher.New(),
+		regexCache: make(map[string]*regexp.Regexp),
 	}
 	w.Watcher.AddFilterHook(watcher.RegexFilterHook(conf.Regex, false))
 

@@ -2,6 +2,7 @@ package watcher
 
 import (
 	"fmt"
+	"path"
 	"time"
 
 	"github.com/radovskyb/watcher"
@@ -165,7 +166,7 @@ func (w *Watcher) makeVarMap(ev watcher.Event) (varMap map[string]tVarMapEntry) 
 		ev.Path, "file that triggered the event",
 	}
 	varMap["folder"] = tVarMapEntry{
-		w.rxfind(`.*/`, ev.Path), "folder of the file that triggered the event",
+		path.Dir(ev.Path), "folder of the file that triggered the event",
 	}
 	return
 }
