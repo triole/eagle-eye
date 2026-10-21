@@ -4,6 +4,7 @@ import (
 	"eagle-eye/src/conf"
 	"eagle-eye/src/watcher"
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"time"
 
@@ -14,8 +15,15 @@ func main() {
 	parseArgs()
 
 	conf := conf.Init()
+	conf.Lg = logseal.Init(CLI.LogLevel, CLI.LogFile, CLI.LogNoColors, CLI.LogJSON)
+
 	conf.Command = CLI.Command
-	conf.Folder = CLI.Folder
+	pth, err := filepath.Abs(CLI.Folder)
+	conf.Lg.IfErrFatal(
+		"can not determine absolute path: %s",
+		logseal.F{"path": pth, "error": err},
+	)
+	conf.Folder = pth
 	conf.Interval = time.Duration(CLI.Interval) * time.Second
 	conf.Pause = time.Duration(CLI.Pause) * time.Second
 	conf.Debounce = time.Duration(CLI.Debounce) * time.Millisecond
@@ -27,8 +35,6 @@ func main() {
 	if len(conf.Command) < 1 {
 		conf.Spectate = true
 	}
-
-	conf.Lg = logseal.Init(CLI.LogLevel, CLI.LogFile, CLI.LogNoColors, CLI.LogJSON)
 
 	mode := fmt.Sprintf("run on change: %q", conf.Command)
 	if conf.Spectate {
