@@ -112,9 +112,16 @@ func (w *Watcher) startDebounceTimer(event watcher.Event, command []string, keep
 		w.debounceTimer.Stop()
 	}
 
+	// Capture all parameters by value to avoid race condition
+	// with future event modifications
+	currentEvent := event
+	currentCommand := command
+	currentKeepOutput := keepOutput
+	currentPause := pause
+	currentVerbose := verbose
+
 	w.debounceTimer = time.AfterFunc(debounceDuration, func() {
-		// Release lock before executing to avoid deadlock
-		w.executeCommand(event, command, keepOutput, pause, verbose)
+		w.executeCommand(currentEvent, currentCommand, currentKeepOutput, currentPause, currentVerbose)
 	})
 	w.debounceMu.Unlock()
 }
