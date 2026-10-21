@@ -3,6 +3,11 @@ package watcher
 import "regexp"
 
 func (w *Watcher) matchRegex(rx string, content string) (result string) {
+	// Initialize regexCache if nil (e.g., when Watcher is created without Init)
+	if w.regexCache == nil {
+		w.regexCache = make(map[string]*regexp.Regexp)
+	}
+
 	// Try to get compiled regex from cache (read lock)
 	w.regexMu.RLock()
 	compiled, cached := w.regexCache[rx]
