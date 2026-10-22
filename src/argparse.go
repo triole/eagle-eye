@@ -14,7 +14,7 @@ var (
 	BUILDTAGS      string
 	appName        = "eagle-eye"
 	appDescription = "eagle-eye is a folder watcher that runs commands on change of files"
-	appMainversion = "0.1"
+	appMainversion = "0.2"
 )
 
 var CLI struct {
